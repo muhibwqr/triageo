@@ -6,6 +6,11 @@ from triage import parse_log, baseline_severity, summarize
 from rag import search, build_index
 from llm import triage_with_llm
 from blockkit import triage_blocks
+from slack_sdk.web import WebClient
+from images import pick_random_image
+
+client = WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
+
 
 load_dotenv()
 app = App(token=os.getenv("SLACK_BOT_TOKEN"))
