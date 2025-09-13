@@ -1,52 +1,76 @@
-<p align="center">
-  <img src="assets/logo_in_black.png" alt="Triageo Logo" width="200"/>
-</p>
+# Triageo
 
-# 🚨 Triageo – AI-Powered Security Triage for Slack  
+**Slack-native AI Security Triage Bot**
 
-**THE PROMISE:** *From chaos to clarity, in seconds.*  
+Triageo ingests logs and system docs, triages incidents, and suggests threat-aware responses — all inside Slack. Built for **Hack the North 2025**.
 
 ---
 
-## 🌐 What is Triageo?  
-Triageo is a **Slack-native AI security triage assistant** that helps teams cut through the noise of security alerts. Instead of manually sifting through endless logs: Triageo parses, classifies, and prioritizes incidents **directly** inside Slack. This gives security teams actionable insights instantly!  
+## 🎯 Why We Built Triageo
+Security engineers and developers are overwhelmed by **noisy alerts, logs, and incidents**. Threat modeling is often skipped because it’s slow and manual. We asked: can an **AI agent** cut through the noise, ground its reasoning in trusted security knowledge, and suggest the *right first steps* — directly in Slack?
+
+Triageo is our answer: a **Slack-first triage assistant** that blends lightweight heuristics, retrieval‑augmented AI, and a human‑in‑the‑loop flow.
 
 ---
 
-## 🔑 Key Features  
-- **Log Intelligence** → Automatically detects anomalies (failed logins, injection attempts, prompt injection signals).  
-- **AI-Driven Triage** → Assigns severity levels (`low`, `medium`, `high`, `critical`), categorizes threats, and suggests recommended actions.  
-- **Human-in-the-Loop Safety** → Interactive buttons for escalation, acknowledgement, and severity adjustments keep analysts in control.  
-- **Grounded Decisions** → Backed by a lightweight Retrieval-Augmented Generation (RAG) over OWASP guidelines and security runbooks.  
-- **Slack-Native UX** → No new dashboards — all results delivered where teams already work.  
+## 🛠️ Tech Stack
+- **Languages**: Python 3.11
+- **Slack**: Bolt (Python), Socket Mode (no public URL required)
+- **AI & RAG**: Cohere Embed v3 for embeddings; Cohere/Bedrock LLM for reasoning; tiny JSON index (FAISS-like behavior)
+- **Data**: Local JSON/SQLite (optional) for audit trail
+- **Security Content**: OWASP LLM Top‑10 + mini runbooks
 
 ---
 
-## 🎯 Why Triageo?  
-Security teams drown in alerts. Traditional SIEMs are complex and slow. Triageo is:  
-- ⚡ **Fast** → From log to triage in under 5 seconds.  
-- 🔑 **Accessible** → Drop-in setup for any Slack workspace.  
-- 📈 **Scalable** → Handles everything from small team logs to high-volume incident streams.  
+## 🚀 Features
+- 🔎 **Incident triage**: log parsing, anomaly detection, severity classification
+- 🛡️ **Security grounding**: RAG over OWASP LLM Top‑10 + runbooks
+- 🤖 **Threat modeling**: upload system docs → top risks + mitigations
+- 💬 **Slack‑native UX**: emoji severity badges, action buttons, human‑in‑the‑loop
+- 🧑‍💻 **Hackathon‑ready**: Mock mode (no external API needed) with easy switch to live LLM
 
 ---
 
-## 🏆 Hack the North 2025 Impact  
-Triageo demonstrates how AI can simplify cybersecurity workflows by:  
-- Bridging the gap between raw logs and actionable security response.  
-- Empowering teams to respond faster with higher confidence.  
-- Making advanced triage accessible to everyone — even small teams without dedicated SOCs.  
+## ⚡ Quickstart
+1. **Create Slack App** (https://api.slack.com/apps)
+   - *Socket Mode*: **On**
+   - *App‑level token*: create with `connections:write` → **SLACK_APP_TOKEN** (`xapp-…`)
+   - *Bot Scopes*: `app_mentions:read`, `chat:write`, `files:read`, `channels:history`, `im:history` → Install → **SLACK_BOT_TOKEN** (`xoxb-…`)
+2. **Install deps & run**
+   ```bash
+   python -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   cp .env.example .env  # fill tokens & keys
+   python app.py
+   ```
+3. **Try it in Slack**
+   - Mention the bot and say: `log` then paste a few lines, **or** upload `samples/auth_burst.log` and mention @Triageo in the thread.
 
 ---
 
-## 📂 Demo Flow  
-1. Upload a sample log (e.g., `auth_burst.log`) to Slack and @mention Triageo.  
-2. Triageo parses the log, detects anomalies, and assigns severity.  
-3. Slack card displays category, summary, recommended actions, and evidence.  
-4. Analyst chooses: 🚨 *Escalate*, 👀 *Acknowledge*, or ⬇️ *Lower severity*.  
+## 🧪 Demo Script (5 min)
+1. Upload `samples/auth_burst.log` and @mention the bot → triage card (HIGH severity).
+2. Click **Escalate** → explain human‑in‑the‑loop.
+3. Paste `samples/injection_trace.log` in a mention → category switches to `injection`.
+4. (Stretch) Upload `samples/system.md` and @mention `threatmodel` → top‑5 risks.
 
 ---
 
-## 🚀 Next Steps  (TODO THIS SECTION)
-- Expand `/triageo threatmodel` to analyze system architecture (`system.md`) and highlight top threats.  
-- Add persistent state to track escalations and acknowledgements.  
-- Extend support for more log formats (network traffic, cloud events, etc.).  
+## Supported Input Formats
+- **Pasted logs** in a mention (`@Triageo log ...`)
+- **File uploads**: `.log`, `.txt` (mention the bot in the thread)
+- **System docs**: `.md` for threat-sweep
+- **Webhook JSON** (optional): `{ lines:[], message, raw }` to `/ingest/siem`
+
+---
+
+## 🧭 Roadmap
+- Persist button actions (ack/escalate) to `state.json` or SQLite
+- On‑call mapping (service → Slack group)
+- Cloud log connectors (AWS/GCP/Datadog)
+- Compliance helpers (SOC2 style report drafts)
+
+---
+
+## 📜 License
+MIT (hackathon demo)
