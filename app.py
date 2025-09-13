@@ -17,6 +17,7 @@ def on_mention(body, say, logger):
 
     text = body.get("event", {}).get("text", "")
     files = body.get("event", {}).get("files", [])
+    user_id = app.client.auth_test()["user_id"]
 
     print(f"DEBUG: Text content: {text}")
     print(f"DEBUG: Files detected: {files}")
@@ -45,6 +46,37 @@ def on_mention(body, say, logger):
             print("DEBUG: Log detected in mention")
             say("⏳ Triage in progress…")
             _process_and_reply(say, payload)
+            return
+
+    # Check for explain or recommend phrases directed at the bot's user ID mention
+    mention_str = f"<@{user_id}>"
+    if mention_str in text and ("explain" in lower or "recommend" in lower):
+        try:
+            # Strip the bot mention from the text
+            stripped_text = text.replace(mention_str, "").strip()
+
+            summary = summarize(parse_log(stripped_text))
+            prompt = f"""
+You are a security triage assistant.
+You are a helpful assistant. Based on this log summary:
+{summary}
+Please provide suggested next actions or recommendations to fix the issue.
+Keep the response concise and actionable for Slack.
+"""
+
+            import cohere
+            co = cohere.Client(os.getenv("COHERE_API_KEY"))
+            resp = co.chat(model="command-r-plus", message=prompt, temperature=0.3)
+            recommendations = resp.text.strip()
+
+            # Use client from app to post message
+            client = app.client
+            channel_id = body.get("event", {}).get("channel")
+            client.chat_postMessage(channel=channel_id, text=f"🛠️ Suggested next actions:\n{recommendations}")
+            return
+        except Exception as e:
+            logger.exception(e)
+            say("⚠️ Could not generate recommendations at this time.")
             return
 
     print("DEBUG: No actionable content detected")
@@ -78,7 +110,7 @@ def on_why(ack, body, client, logger):
         ]
 
         prompt = f"""
-        You are a security analyst assistant.
+        You are a security analyst assistant. Based on the context provided, respond to the query and explain the reccomended remediations process.
         Explain in plain language why this alert is {baseline.upper()} severity.
         LOG SUMMARY: {summary}
         EVIDENCE: {evidence}
