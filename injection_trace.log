@@ -1,0 +1,3 @@
+GET /search?q=' OR 1=1 -- HTTP/1.1 from 198.51.100.9
+GET /admin HTTP/1.1 from 198.51.100.9 -> 403
+GET /products?id=1 UNION SELECT credit_card_number FROM users -- 500

@@ -1,0 +1,6 @@
+2025-09-13T16:01:09Z login failed for user alice from 203.0.113.7
+2025-09-13T16:01:11Z login failed for user bob from 203.0.113.7
+2025-09-13T16:01:18Z login failed for user admin from 203.0.113.7
+2025-09-13T16:01:41Z authentication failed: invalid password from 203.0.113.7
+2025-09-13T16:02:05Z authentication failed: invalid password from 203.0.113.7
+2025-09-13T16:02:26Z 503 upstream timeout /auth/api
