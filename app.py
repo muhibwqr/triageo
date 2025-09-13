@@ -117,7 +117,26 @@ def _process_and_reply(respond_fn, text: str):
     ev = [d["text"] for d in search(summary, k=3)]
     result = triage_with_llm(summary=summary, baseline=base, evidence_snippets=ev)
     blocks = triage_blocks(result)
-    respond_fn(blocks=blocks)
+    blocks = triage_blocks(result)
+
+# Post the triage card
+resp = client.chat_postMessage(
+    channel=os.getenv("SLACK_CHANNEL_ID"),
+    blocks=blocks
+)
+thread_ts = resp["ts"]
+
+# Attach random image from assets/
+img_path = pick_random_image()
+if img_path:
+    client.files_upload_v2(
+        channel=os.getenv("SLACK_CHANNEL_ID"),
+        file=img_path,
+        filename=os.path.basename(img_path),
+        initial_comment="🎲 Random asset attached",
+        thread_ts=thread_ts,
+    )
+
 
 
 # --- Real-time log tailing and Bolt integration ---
@@ -144,18 +163,6 @@ def tail_log(file_path):
             line = line.strip()
             if line:
                 yield line
-resp = client.chat_postMessage(channel=os.getenv("SLACK_CHANNEL_ID"), blocks=blocks)
-thread_ts = resp["ts"]
-
-img_path = pick_random_image()
-if img_path:
-    client.files_upload_v2(
-        channel=os.getenv("SLACK_CHANNEL_ID"),
-        file=img_path,
-        filename=os.path.basename(img_path),
-        initial_comment="🎲 Random asset attached",
-        thread_ts=thread_ts,
-    )
 
 
 
