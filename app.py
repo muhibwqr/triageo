@@ -144,6 +144,20 @@ def tail_log(file_path):
             line = line.strip()
             if line:
                 yield line
+resp = client.chat_postMessage(channel=os.getenv("SLACK_CHANNEL_ID"), blocks=blocks)
+thread_ts = resp["ts"]
+
+img_path = pick_random_image()
+if img_path:
+    client.files_upload_v2(
+        channel=os.getenv("SLACK_CHANNEL_ID"),
+        file=img_path,
+        filename=os.path.basename(img_path),
+        initial_comment="🎲 Random asset attached",
+        thread_ts=thread_ts,
+    )
+
+
 
 def start_realtime():
     print(f"Starting real-time log monitoring on {LOG_FILE}...")
