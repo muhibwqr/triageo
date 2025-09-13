@@ -12,8 +12,15 @@ app = App(token=os.getenv("SLACK_BOT_TOKEN"))
 
 @app.event("app_mention")
 def on_mention(body, say, logger):
+    print("DEBUG: Received app_mention event!")
+    logger.info(f"Full event payload: {body}")
+
     text = body.get("event", {}).get("text", "")
     files = body.get("event", {}).get("files", [])
+
+    print(f"DEBUG: Text content: {text}")
+    print(f"DEBUG: Files detected: {files}")
+
     if files:
         try:
             f = files[0]
@@ -22,6 +29,7 @@ def on_mention(body, say, logger):
             r = requests.get(url, headers=headers, timeout=20)
             r.raise_for_status()
             content = r.text
+            print("DEBUG: File content fetched")
             say("⏳ Triage in progress…")
             _process_and_reply(say, content)
             return
@@ -29,13 +37,17 @@ def on_mention(body, say, logger):
             logger.exception(e)
             say(f"Could not read file: {e}")
             return
+
     lower = text.lower()
     if "log" in lower:
         payload = text.split("log", 1)[-1]
         if payload.strip():
+            print("DEBUG: Log detected in mention")
             say("⏳ Triage in progress…")
             _process_and_reply(say, payload)
             return
+
+    print("DEBUG: No actionable content detected")
     say("Triageo here. Upload a file and @mention me, or @mention me with the word `log` followed by pasted lines.")
 
 @app.action("btn_escalate")

@@ -1,5 +1,5 @@
 import threading, os
-from slack_bolt.adapter.socket_mode import SocketModeHandler
+# from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
 from app import app as bolt_app
 import uvicorn
@@ -40,7 +40,34 @@ def run_slack():
 def run_http():
     uvicorn.run("server:api", host="0.0.0.0", port=8080, reload=False)
 
+
+from types import SimpleNamespace
+
 if __name__ == "__main__":
-    t1 = threading.Thread(target=run_slack, daemon=True)
-    t1.start()
-    run_http()
+    # make a fake triage result
+    fake_tr = SimpleNamespace(
+        severity="critical",
+        category="injection",
+        summary="Multiple SQL injection attempts detected",
+        recommended_actions=[
+            "Block abusive IP at firewall",
+            "Add input sanitization on query parameters",
+            "Review recent DB access logs"
+        ],
+        evidence=[
+            "GET /search?q=' OR 1=1 -- from 198.51.100.9",
+            "GET /products?id=1 UNION SELECT …"
+        ],
+        confidence=0.92,
+        needs_human_review=True,
+    )
+
+    # call your function
+    blocks = demo_blocks(fake_tr)
+    import json
+    print(json.dumps(blocks, indent=2))
+
+# if __name__ == "__main__":
+#     t1 = threading.Thread(target=run_slack, daemon=True)
+#     t1.start()
+#     run_http()
