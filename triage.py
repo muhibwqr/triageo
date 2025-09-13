@@ -41,14 +41,17 @@ def parse_log(text: str) -> Dict:
 
 def baseline_severity(parsed: Dict) -> str:
     c = parsed["counts"]
-    if c["llm_prompt_injection"] >= 3 or c["server_error"] >= 25:
+    # Flag any prompt injection immediately as critical
+    if c["llm_prompt_injection"] >= 1:
         return "critical"
-    if c["failed_login"] >= 20 or c["suspicious_path"] >= 10 or c["server_error"] >= 10:
+    # High severity conditions
+    if c["server_error"] >= 25 or c["failed_login"] >= 20 or c["suspicious_path"] >= 10 or c["server_error"] >= 10:
         return "high"
+    # Medium severity conditions
     if any(v >= 3 for v in c.values()):
         return "medium"
+    # Default low severity
     return "low"
-
 def summarize(parsed: Dict) -> str:
     c = parsed["counts"]
     bits = []
