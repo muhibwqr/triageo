@@ -10,6 +10,22 @@ from blockkit import triage_blocks
 load_dotenv()
 app = App(token=os.getenv("SLACK_BOT_TOKEN"))
 
+def send_to_dashboard(result, summary, evidence):
+    import requests
+    dashboard_url = os.getenv("DASHBOARD_API_URL")
+    if dashboard_url:
+        payload = {
+            "summary": summary,
+            "severity": result.severity,
+            "category": result.category,
+            "recommended_actions": result.recommended_actions,
+            "evidence": evidence
+        }
+        try:
+            requests.post(f"{dashboard_url}/alerts", json=payload, timeout=5)
+        except Exception as e:
+            print("Failed to send alert to dashboard:", e)
+
 @app.event("app_mention")
 def on_mention(body, say, logger):
     print("DEBUG: Received app_mention event!")
@@ -143,6 +159,7 @@ def _process_and_reply(respond_fn, text: str):
     summary = summarize(parsed)
     ev = [d["text"] for d in search(summary, k=3)]
     result = triage_with_llm(summary=summary, baseline=base, evidence_snippets=ev)
+    send_to_dashboard(result, summary, ev)
     blocks = triage_blocks(result)
     respond_fn(blocks=blocks)
 
@@ -180,9 +197,17 @@ def start_realtime():
         summary = summarize(parsed)
         ev = [d["text"] for d in search(summary, k=3)]
         result = triage_with_llm(summary=summary, baseline=base, evidence_snippets=ev)
-        # post using Bolt client so buttons work
-        app.client.chat_postMessage(channel="#security-alerts", text="New alert from Triageo", blocks=triage_blocks(result))
-
+        
+        # send to Slack (with buttons)
+        app.client.chat_postMessage(
+            channel="#security-alerts",
+            text="New alert from Triageo",
+            blocks=triage_blocks(result)
+        )
+        
+        # send to dashboard
+        send_to_dashboard(result, summary, ev)
+        
 # start real-time tail in a separate thread
 threading.Thread(target=start_realtime, daemon=True).start()
 
